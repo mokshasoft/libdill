@@ -208,6 +208,7 @@ endif
 #  performance tests                                                           #
 ################################################################################
 
+if DILL_SOCKETS
 noinst_PROGRAMS += \
     perf/go \
     perf/ctxswitch \
@@ -216,6 +217,7 @@ noinst_PROGRAMS += \
     perf/done \
     perf/whispers \
     perf/timer
+endif
 
 ################################################################################
 #  manpage documentation generation                                            #
