@@ -25,15 +25,15 @@ import Foreign.Storable
 dill_chmake :: IO (Maybe (CInt, CInt))
 dill_chmake = do
   ch <- newArray [0, 0]
-  pokeByteOff ch 0 (0 :: CInt)
-  pokeByteOff ch 1 (0 :: CInt)
+  pokeElemOff ch 0 0
+  pokeElemOff ch 1 0
   -- Create channel endpoint handles and check that it worked
   res <- internal_dill_chmake ch
   if res /= 0
     then return Nothing
     else do
-      ep1 <- peekByteOff ch 0
-      ep2 <- peekByteOff ch 1
+      ep1 <- peekElemOff ch 0
+      ep2 <- peekElemOff ch 1
       if ep1 >= 0 && ep2 >= 0
         then return $ Just (ep1, ep2)
         else return Nothing
