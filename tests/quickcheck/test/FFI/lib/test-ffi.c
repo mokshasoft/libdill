@@ -1,5 +1,6 @@
 #include "test-ffi.h"
 #include "libdill.h"
+#include "tests/assert.h"
 
 coroutine void sender(int ch, int val) {
     int rc = chsend(ch, &val, sizeof(val), -1);

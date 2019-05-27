@@ -19,7 +19,9 @@ import FFI.TestCaseFFI
 
 -- |Top-level function that runs all libdill QuickCheck tests.
 main :: IO ()
-main = quickCheck (withMaxSuccess 10000 prop_Simple)
+main = do
+  quickCheck (withMaxSuccess 10000 prop_Simple)
+  quickCheck (withMaxSuccess 10000 prop_Simple2)
 
 -- |Test that dill_chmake always returns a channel.
 prop_Simple :: Property
@@ -27,3 +29,16 @@ prop_Simple =
   monadicIO $ do
     ch <- run dill_chmake
     assert (isJust ch)
+
+-- |Test that a receiver waits for the sender
+prop_Simple2 :: Property
+prop_Simple2 =
+  monadicIO $ do
+    res <- run $ do
+      ch <- dill_chmake
+      case ch of
+        Nothing -> return False
+        Just c -> do
+          hdl <- ffi_go_sender (fst c) 333
+          return (hdl >= 0)
+    assert res
