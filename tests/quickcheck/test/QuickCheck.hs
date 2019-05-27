@@ -15,6 +15,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 
 import FFI.Channels
+import FFI.TestCaseFFI
 
 -- |Top-level function that runs all libdill QuickCheck tests.
 main :: IO ()

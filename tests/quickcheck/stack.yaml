@@ -60,6 +60,7 @@ packages:
 extra-include-dirs:
 - ../..
 - ../../dns
+- test/FFI/lib
 extra-lib-dirs:
 - ../../.libs
 
