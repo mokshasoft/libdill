@@ -34,11 +34,14 @@ prop_Simple =
 prop_Simple2 :: Property
 prop_Simple2 =
   monadicIO $ do
-    res <- run $ do
+    res <- run testProp
+    assert res
+  where
+    testProp :: IO Bool
+    testProp = do
       ch <- dill_chmake
       case ch of
         Nothing -> return False
         Just c -> do
           hdl <- ffi_go_sender (fst c) 333
           return (hdl >= 0)
-    assert res
