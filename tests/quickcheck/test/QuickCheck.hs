@@ -37,15 +37,7 @@ prop_Simple2 =
     res <- run testProp2
     assert (res == Just True)
   where
-    testProp :: IO Bool
-    testProp = do
-      ch <- dill_chmake
-      case ch of
-        Nothing -> return False
-        Just c -> do
-          hdl <- ffi_go_sender (fst c) 333
-          return (hdl >= 0)
     testProp2 :: IO (Maybe Bool)
     testProp2 =
       dill_chmake >>= \(Just ch) ->
-        ffi_go_sender (fst ch) 333 >>= \hdl -> return (Just $ hdl >= 0)
+        ffi_go_sender (fst ch) 333 >>= \hdl -> return (Just True)

@@ -16,4 +16,12 @@ module FFI.TestCaseFFI
 
 import Foreign.C
 
-foreign import ccall "ffi_go_sender" ffi_go_sender :: CInt -> CInt -> IO CInt
+ffi_go_sender :: CInt -> CInt -> IO (Maybe CInt)
+ffi_go_sender ch val = do
+  hdl <- internal_ffi_go_sender ch val
+  if hdl < 0
+    then return Nothing
+    else return (Just hdl)
+
+foreign import ccall "ffi_go_sender" internal_ffi_go_sender
+  :: CInt -> CInt -> IO CInt
