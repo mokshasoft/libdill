@@ -17,6 +17,7 @@ module FFI.Channels
 import Control.Monad
 import Data.Int
 import Foreign.C
+import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
 import Foreign.Ptr
 import Foreign.Storable
@@ -39,3 +40,16 @@ dill_chmake = do
         else return Nothing
 
 foreign import ccall "dill_chmake" internal_dill_chmake :: Ptr CInt -> IO CInt
+
+dill_chrecv_int :: CInt -> IO (Maybe CInt)
+dill_chrecv_int ch = do
+  val <- malloc
+  res <- internal_dill_chrecv_int ch val (fromIntegral (sizeOf val)) (-1)
+  if res /= 0
+    then return Nothing
+    else do
+      v <- peekElemOff val 0
+      return $ Just v
+
+foreign import ccall "dill_chrecv" internal_dill_chrecv_int
+  :: CInt -> Ptr CInt -> CInt -> CInt -> IO CInt
