@@ -64,7 +64,7 @@ prop_ReceiverWaitsForSender val =
     testProp = do
       channel <- getChannel
       hdl <- ffi_go_sender (fst channel) val
-      unless (isJust hdl) $ triggerAssert "Failed to get handle"
+      unless (isJust hdl) $ triggerAssert "Failed to get sender handle"
       let handle = fromMaybe 0 hdl
       rv <- dill_chrecv_int (snd channel)
       unless (isJust rv) $ triggerAssert "Failed to receive value"
@@ -85,7 +85,7 @@ prop_SimultaneousSenders (NonEmpty vs) =
     testProp = do
       channel <- getChannel
       hdls <- mapM (ffi_go_sender (fst channel)) vs
-      unless (all isJust hdls) $ triggerAssert "Failed to get all handles"
+      unless (all isJust hdls) $ triggerAssert "Failed to get all sender handles"
       let handles = map (fromMaybe 0) hdls
       rvs <- mapM (\_ -> dill_chrecv_int (snd channel)) handles
       unless (all isJust rvs) $ triggerAssert "Failed to receive all values"
