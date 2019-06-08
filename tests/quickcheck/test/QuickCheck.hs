@@ -40,9 +40,12 @@ prop_GetChannel =
 
 -- |Test that a receiver waits for the sender
 prop_ReceiverWaitsForSender :: CInt -> Property
-prop_ReceiverWaitsForSender val = monadicIO $ run testProp
+prop_ReceiverWaitsForSender val =
+  monadicIO $ do
+    res <- run testProp
+    assert res
   where
-    testProp :: IO ()
+    testProp :: IO Bool
     testProp = do
       ch <- dill_chmake
       unless (isJust ch) $ triggerAssert "Failed to get channel"
@@ -59,13 +62,16 @@ prop_ReceiverWaitsForSender val = monadicIO $ run testProp
       unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
       rc3 <- dill_hclose handle
       unless (rc3 == 0) $ triggerAssert "Failed to close sender handle"
-      CE.assert (val == retVal) $ return ()
+      return $ val == retVal
 
 -- |Test multiple simultaneous senders, each sender sends one value
 prop_SimultaneousSenders :: NonEmptyList CInt -> Property
-prop_SimultaneousSenders (NonEmpty vs) = monadicIO $ run testProp
+prop_SimultaneousSenders (NonEmpty vs) =
+  monadicIO $ do
+    res <- run testProp
+    assert res
   where
-    testProp :: IO ()
+    testProp :: IO Bool
     testProp = do
       ch <- dill_chmake
       unless (isJust ch) $ triggerAssert "Failed to get channel"
@@ -83,4 +89,4 @@ prop_SimultaneousSenders (NonEmpty vs) = monadicIO $ run testProp
       rc3s <- mapM dill_hclose handles
       unless (all (== 0) rc3s) $
         triggerAssert "Failed to close all sender handles"
-      CE.assert (vs == retVals) $ return ()
+      return $ vs == retVals
