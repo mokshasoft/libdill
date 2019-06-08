@@ -29,7 +29,7 @@ main = do
 triggerAssert :: String -> IO ()
 triggerAssert str = do
   putStrLn str
-  CE.assert False undefined
+  CE.assert False $ return ()
 
 -- |Test that dill_chmake always returns a channel.
 prop_GetChannel :: Property
@@ -59,6 +59,7 @@ prop_ReceiverWaitsForSender val = monadicIO $ run testProp
       unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
       rc3 <- dill_hclose handle
       unless (rc3 == 0) $ triggerAssert "Failed to close sender handle"
+      CE.assert (val == retVal) $ return ()
 
 -- |Test multiple simultaneous senders, each sender sends one value
 prop_SimultaneousSenders :: NonEmptyList CInt -> Property
@@ -82,3 +83,4 @@ prop_SimultaneousSenders (NonEmpty vs) = monadicIO $ run testProp
       rc3s <- mapM dill_hclose handles
       unless (all (== 0) rc3s) $
         triggerAssert "Failed to close all sender handles"
+      CE.assert (vs == retVals) $ return ()
