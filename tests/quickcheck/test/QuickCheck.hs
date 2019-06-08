@@ -20,8 +20,8 @@ import FFI.TestCaseFFI
 -- |Top-level function that runs all libdill QuickCheck tests.
 main :: IO ()
 main = do
-  quickCheck (withMaxSuccess 10000 prop_Simple)
-  quickCheck (withMaxSuccess 10000 prop_Simple2)
+  quickCheck (withMaxSuccess 10000 prop_GetChannel)
+  quickCheck (withMaxSuccess 10000 prop_ReceiverWaitsForSender)
 
 -- Non-property test
 runTest :: CInt -> IO String
@@ -44,15 +44,15 @@ runTest val = do
                 else "Got incorrect value"
 
 -- |Test that dill_chmake always returns a channel.
-prop_Simple :: Property
-prop_Simple =
+prop_GetChannel :: Property
+prop_GetChannel =
   monadicIO $ do
     ch <- run dill_chmake
     assert (isJust ch)
 
 -- |Test that a receiver waits for the sender
-prop_Simple2 :: CInt -> Property
-prop_Simple2 val =
+prop_ReceiverWaitsForSender :: CInt -> Property
+prop_ReceiverWaitsForSender val =
   monadicIO $ do
     res <- run testProp2
     assert (res == Just True)
@@ -60,7 +60,7 @@ prop_Simple2 val =
     testProp2 :: IO (Maybe Bool)
     testProp2 =
       dill_chmake >>= \(Just ch) ->
-        ffi_go_sender (fst ch) val >>= \hdl ->
+        ffi_go_sender (fst ch) val >>= \(Just hdl) ->
           dill_chrecv_int (snd ch) >>= \(Just retVal) ->
             if val == retVal
               then return (Just True)
