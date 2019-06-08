@@ -54,14 +54,11 @@ prop_GetChannel =
 prop_ReceiverWaitsForSender :: CInt -> Property
 prop_ReceiverWaitsForSender val =
   monadicIO $ do
-    res <- run testProp2
-    assert (res == Just True)
+    res <- run testProp
+    assert res
   where
-    testProp2 :: IO (Maybe Bool)
-    testProp2 =
+    testProp :: IO Bool
+    testProp =
       dill_chmake >>= \(Just ch) ->
         ffi_go_sender (fst ch) val >>= \(Just hdl) ->
-          dill_chrecv_int (snd ch) >>= \(Just retVal) ->
-            if val == retVal
-              then return (Just True)
-              else return Nothing
+          dill_chrecv_int (snd ch) >>= \(Just retVal) -> return $ val == retVal
