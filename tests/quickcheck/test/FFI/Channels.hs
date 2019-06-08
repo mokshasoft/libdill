@@ -12,6 +12,7 @@
  -}
 module FFI.Channels
   ( dill_chmake
+  , dill_hclose
   , dill_chrecv_int
   ) where
 
@@ -55,3 +56,5 @@ dill_chrecv_int ch = do
 
 foreign import ccall "dill_chrecv" internal_dill_chrecv_int
   :: CInt -> Ptr CInt -> CInt -> CInt -> IO CInt
+
+foreign import ccall "dill_hclose" dill_hclose :: CInt -> IO CInt

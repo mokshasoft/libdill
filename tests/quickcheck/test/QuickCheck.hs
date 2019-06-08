@@ -61,4 +61,8 @@ prop_ReceiverWaitsForSender val =
     testProp =
       dill_chmake >>= \(Just ch) ->
         ffi_go_sender (fst ch) val >>= \(Just hdl) ->
-          dill_chrecv_int (snd ch) >>= \(Just retVal) -> return $ val == retVal
+          dill_chrecv_int (snd ch) >>= \(Just retVal) ->
+            dill_hclose (snd ch) >>= \rc1 ->
+              dill_hclose (fst ch) >>= \rc2 ->
+                dill_hclose hdl >>= \rc3 ->
+                  return $ val == retVal && rc1 == 0 && rc2 == 0 && rc3 == 0
