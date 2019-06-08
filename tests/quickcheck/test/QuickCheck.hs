@@ -38,6 +38,14 @@ getChannel = do
   unless (isJust ch) $ triggerAssert "Failed to get channel"
   return $ fromMaybe (0, 0) ch
 
+-- |Close a channel
+closeChannel :: (CInt, CInt) -> IO ()
+closeChannel channel = do
+  rc1 <- dill_hclose (snd channel)
+  unless (rc1 == 0) $ triggerAssert "Failed to close receiver end-point"
+  rc2 <- dill_hclose (fst channel)
+  unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
+
 -- |Test that dill_chmake always returns a channel.
 prop_GetChannel :: Property
 prop_GetChannel =
@@ -61,12 +69,9 @@ prop_ReceiverWaitsForSender val =
       rv <- dill_chrecv_int (snd channel)
       unless (isJust rv) $ triggerAssert "Failed to receive value"
       let retVal = fromMaybe 0 rv
-      rc1 <- dill_hclose (snd channel)
-      unless (rc1 == 0) $ triggerAssert "Failed to close receiver end-point"
-      rc2 <- dill_hclose (fst channel)
-      unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
-      rc3 <- dill_hclose handle
-      unless (rc3 == 0) $ triggerAssert "Failed to close sender handle"
+      closeChannel channel
+      rc <- dill_hclose handle
+      unless (rc == 0) $ triggerAssert "Failed to close sender handle"
       return $ val == retVal
 
 -- |Test multiple simultaneous senders, each sender sends one value
@@ -85,11 +90,8 @@ prop_SimultaneousSenders (NonEmpty vs) =
       rvs <- mapM (\_ -> dill_chrecv_int (snd channel)) handles
       unless (all isJust rvs) $ triggerAssert "Failed to receive all values"
       let retVals = map (fromMaybe 0) rvs
-      rc1 <- dill_hclose (snd channel)
-      unless (rc1 == 0) $ triggerAssert "Failed to close receiver end-point"
-      rc2 <- dill_hclose (fst channel)
-      unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
-      rc3s <- mapM dill_hclose handles
-      unless (all (== 0) rc3s) $
+      closeChannel channel
+      rcs <- mapM dill_hclose handles
+      unless (all (== 0) rcs) $
         triggerAssert "Failed to close all sender handles"
       return $ vs == retVals
