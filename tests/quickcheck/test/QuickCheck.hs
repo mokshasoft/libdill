@@ -31,8 +31,8 @@ prop_Simple =
     assert (isJust ch)
 
 -- |Test that a receiver waits for the sender
-prop_Simple2 :: Property
-prop_Simple2 =
+prop_Simple2 :: CInt -> Property
+prop_Simple2 val =
   monadicIO $ do
     res <- run testProp2
     assert (res == Just True)
@@ -40,4 +40,8 @@ prop_Simple2 =
     testProp2 :: IO (Maybe Bool)
     testProp2 =
       dill_chmake >>= \(Just ch) ->
-        ffi_go_sender (fst ch) 333 >>= \hdl -> return (Just True)
+        ffi_go_sender (fst ch) val >>= \hdl ->
+          dill_chrecv_int (snd ch) >>= \(Just retVal) ->
+            if val == retVal
+              then return (Just True)
+              else return Nothing

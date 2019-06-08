@@ -12,6 +12,7 @@
  -}
 module FFI.Channels
   ( dill_chmake
+  , dill_chrecv_int
   ) where
 
 import Control.Monad
