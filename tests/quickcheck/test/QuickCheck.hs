@@ -5,6 +5,7 @@
  the GNU General Public License version 3. Note that NO WARRANTY is provided.
  See "LICENSE.txt" for details.
  -}
+import qualified Control.Exception as CE
 import Control.Monad
 import Data.Int
 import qualified Data.Map as Map
@@ -43,6 +44,12 @@ runTest val = do
                 then "Got correct value"
                 else "Got incorrect value"
 
+-- |Print a string and trigger an assert
+triggerAssert :: String -> IO ()
+triggerAssert str = do
+  putStrLn str
+  CE.assert False undefined
+
 -- |Test that dill_chmake always returns a channel.
 prop_GetChannel :: Property
 prop_GetChannel =
@@ -52,17 +59,22 @@ prop_GetChannel =
 
 -- |Test that a receiver waits for the sender
 prop_ReceiverWaitsForSender :: CInt -> Property
-prop_ReceiverWaitsForSender val =
-  monadicIO $ do
-    res <- run testProp
-    assert res
+prop_ReceiverWaitsForSender val = monadicIO $ run testProp
   where
-    testProp :: IO Bool
-    testProp =
-      dill_chmake >>= \(Just ch) ->
-        ffi_go_sender (fst ch) val >>= \(Just hdl) ->
-          dill_chrecv_int (snd ch) >>= \(Just retVal) ->
-            dill_hclose (snd ch) >>= \rc1 ->
-              dill_hclose (fst ch) >>= \rc2 ->
-                dill_hclose hdl >>= \rc3 ->
-                  return $ val == retVal && rc1 == 0 && rc2 == 0 && rc3 == 0
+    testProp :: IO ()
+    testProp = do
+      ch <- dill_chmake
+      unless (isJust ch) $ triggerAssert "Failed to get channel"
+      let channel = fromMaybe (0, 0) ch
+      hdl <- ffi_go_sender (fst channel) val
+      unless (isJust hdl) $ triggerAssert "Failed to get handle"
+      let handle = fromMaybe 0 hdl
+      rv <- dill_chrecv_int (snd channel)
+      unless (isJust rv) $ triggerAssert "Failed to receive result"
+      let retVal = fromMaybe 0 rv
+      rc1 <- dill_hclose (snd channel)
+      unless (rc1 == 0) $ triggerAssert "Failed to close receiver end-point"
+      rc2 <- dill_hclose (fst channel)
+      unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
+      rc3 <- dill_hclose handle
+      unless (rc3 == 0) $ triggerAssert "Failed to close sender handle"
