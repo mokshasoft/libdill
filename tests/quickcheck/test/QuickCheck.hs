@@ -23,6 +23,7 @@ main :: IO ()
 main = do
   quickCheck (withMaxSuccess 10000 prop_GetChannel)
   quickCheck (withMaxSuccess 10000 prop_ReceiverWaitsForSender)
+  quickCheck (withMaxSuccess 10000 prop_SimultaneousSenders)
 
 -- |Print a string and trigger an assert
 triggerAssert :: String -> IO ()
@@ -50,7 +51,7 @@ prop_ReceiverWaitsForSender val = monadicIO $ run testProp
       unless (isJust hdl) $ triggerAssert "Failed to get handle"
       let handle = fromMaybe 0 hdl
       rv <- dill_chrecv_int (snd channel)
-      unless (isJust rv) $ triggerAssert "Failed to receive result"
+      unless (isJust rv) $ triggerAssert "Failed to receive value"
       let retVal = fromMaybe 0 rv
       rc1 <- dill_hclose (snd channel)
       unless (rc1 == 0) $ triggerAssert "Failed to close receiver end-point"
@@ -58,3 +59,26 @@ prop_ReceiverWaitsForSender val = monadicIO $ run testProp
       unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
       rc3 <- dill_hclose handle
       unless (rc3 == 0) $ triggerAssert "Failed to close sender handle"
+
+-- |Test multiple simultaneous senders, each sender sends one value
+prop_SimultaneousSenders :: NonEmptyList CInt -> Property
+prop_SimultaneousSenders (NonEmpty vs) = monadicIO $ run testProp
+  where
+    testProp :: IO ()
+    testProp = do
+      ch <- dill_chmake
+      unless (isJust ch) $ triggerAssert "Failed to get channel"
+      let channel = fromMaybe (0, 0) ch
+      hdls <- mapM (ffi_go_sender (fst channel)) vs
+      unless (all isJust hdls) $ triggerAssert "Failed to get all handles"
+      let handles = map (fromMaybe 0) hdls
+      rvs <- mapM (\_ -> dill_chrecv_int (snd channel)) handles
+      unless (all isJust rvs) $ triggerAssert "Failed to receive all values"
+      let retVals = map (fromMaybe 0) rvs
+      rc1 <- dill_hclose (snd channel)
+      unless (rc1 == 0) $ triggerAssert "Failed to close receiver end-point"
+      rc2 <- dill_hclose (fst channel)
+      unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
+      rc3s <- mapM dill_hclose handles
+      unless (all (== 0) rc3s) $
+        triggerAssert "Failed to close all sender handles"
