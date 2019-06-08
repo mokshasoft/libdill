@@ -31,6 +31,13 @@ triggerAssert str = do
   putStrLn str
   CE.assert False $ return ()
 
+-- |Get a channel
+getChannel :: IO (CInt, CInt)
+getChannel = do
+  ch <- dill_chmake
+  unless (isJust ch) $ triggerAssert "Failed to get channel"
+  return $ fromMaybe (0, 0) ch
+
 -- |Test that dill_chmake always returns a channel.
 prop_GetChannel :: Property
 prop_GetChannel =
@@ -47,9 +54,7 @@ prop_ReceiverWaitsForSender val =
   where
     testProp :: IO Bool
     testProp = do
-      ch <- dill_chmake
-      unless (isJust ch) $ triggerAssert "Failed to get channel"
-      let channel = fromMaybe (0, 0) ch
+      channel <- getChannel
       hdl <- ffi_go_sender (fst channel) val
       unless (isJust hdl) $ triggerAssert "Failed to get handle"
       let handle = fromMaybe 0 hdl
@@ -73,9 +78,7 @@ prop_SimultaneousSenders (NonEmpty vs) =
   where
     testProp :: IO Bool
     testProp = do
-      ch <- dill_chmake
-      unless (isJust ch) $ triggerAssert "Failed to get channel"
-      let channel = fromMaybe (0, 0) ch
+      channel <- getChannel
       hdls <- mapM (ffi_go_sender (fst channel)) vs
       unless (all isJust hdls) $ triggerAssert "Failed to get all handles"
       let handles = map (fromMaybe 0) hdls
