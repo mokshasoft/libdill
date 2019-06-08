@@ -45,7 +45,8 @@ foreign import ccall "dill_chmake" internal_dill_chmake :: Ptr CInt -> IO CInt
 dill_chrecv_int :: CInt -> IO (Maybe CInt)
 dill_chrecv_int ch = do
   val <- malloc
-  res <- internal_dill_chrecv_int ch val (fromIntegral (sizeOf val)) (-1)
+  let valSize = fromIntegral (sizeOf (0 :: CInt))
+  res <- internal_dill_chrecv_int ch val valSize (-1)
   if res /= 0
     then return Nothing
     else do

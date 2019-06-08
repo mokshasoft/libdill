@@ -20,10 +20,8 @@ import FFI.TestCaseFFI
 -- |Top-level function that runs all libdill QuickCheck tests.
 main :: IO ()
 main = do
---  quickCheck (withMaxSuccess 10000 prop_Simple)
---  quickCheck (withMaxSuccess 10000 prop_Simple2)
-  ok <- runTest 333
-  putStrLn $ "Test returned: " ++ ok
+  quickCheck (withMaxSuccess 10000 prop_Simple)
+  quickCheck (withMaxSuccess 10000 prop_Simple2)
 
 -- Non-property test
 runTest :: CInt -> IO String
