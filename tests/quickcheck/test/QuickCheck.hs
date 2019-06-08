@@ -24,26 +24,6 @@ main = do
   quickCheck (withMaxSuccess 10000 prop_GetChannel)
   quickCheck (withMaxSuccess 10000 prop_ReceiverWaitsForSender)
 
--- Non-property test
-runTest :: CInt -> IO String
-runTest val = do
-  ch <- dill_chmake
-  case ch of
-    Nothing -> return "Failed to get channel"
-    Just channel -> do
-      hdl <- ffi_go_sender (fst channel) val
-      case hdl of
-        Nothing -> return "Failed to get handle"
-        Just handle -> do
-          retVal <- dill_chrecv_int (snd channel)
-          case retVal of
-            Nothing -> return "Failed to receive value"
-            Just r ->
-              return $
-              if r == val
-                then "Got correct value"
-                else "Got incorrect value"
-
 -- |Print a string and trigger an assert
 triggerAssert :: String -> IO ()
 triggerAssert str = do
