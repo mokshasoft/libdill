@@ -36,9 +36,23 @@ foreign import ccall "wrapper" mkCallback :: Callback -> IO (FunPtr Callback)
 
 ffi_go_sender2 :: CInt -> CInt -> IO (Maybe CInt)
 ffi_go_sender2 ch val = do
-  cbPtr <- mkCallback $ do
-    -- callback code
-    return ()
+  cbPtr <- mkCallback sender
   goCoroutine cbPtr
   freeHaskellFunPtr cbPtr
   return $ Just val
+
+sender :: IO ()
+sender = do
+  -- callback code
+  return ()
+
+{-
+coroutine void sender(int ch, int doyield, int val) {
+    if(doyield) {
+        int rc = yield();
+        errno_assert(rc == 0);
+    }
+    int rc = chsend(ch, &val, sizeof(val), -1);
+    errno_assert(rc == 0);
+}
+-}
