@@ -33,16 +33,18 @@ foreign import ccall "ffi_go_sender" internal_ffi_go_sender
 
 type Callback = IO ()
 
-foreign import ccall "go_coroutine" goCoroutine :: FunPtr Callback -> IO ()
+foreign import ccall "go_coroutine" goCoroutine :: FunPtr Callback -> IO CInt
 
 foreign import ccall "wrapper" mkCallback :: Callback -> IO (FunPtr Callback)
 
 ffi_go_sender2 :: CInt -> CInt -> IO (Maybe CInt)
 ffi_go_sender2 ch val = do
   cbPtr <- mkCallback sender
-  goCoroutine cbPtr
+  hdl <- goCoroutine cbPtr
   freeHaskellFunPtr cbPtr
-  return $ Just val
+  if hdl < 0
+    then return Nothing
+    else return (Just hdl)
   where
     sender :: IO ()
     sender = do
