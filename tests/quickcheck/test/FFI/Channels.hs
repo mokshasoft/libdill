@@ -46,6 +46,7 @@ foreign import ccall "dill_chmake" internal_dill_chmake :: Ptr CInt -> IO CInt
 
 dill_chsend_int :: CInt -> CInt -> IO CInt
 dill_chsend_int ch value = do
+  putStrLn $ "dill_chsend_int: channel= " ++ show ch ++ " val= " ++ show value
   val <- malloc
   pokeElemOff val 0 value
   let valSize = fromIntegral (sizeOf value)
