@@ -13,6 +13,7 @@
 module FFI.Channels
   ( dill_chmake
   , dill_hclose
+  , dill_chsend_int
   , dill_chrecv_int
   ) where
 
@@ -42,6 +43,17 @@ dill_chmake = do
         else return Nothing
 
 foreign import ccall "dill_chmake" internal_dill_chmake :: Ptr CInt -> IO CInt
+
+dill_chsend_int :: CInt -> CInt -> IO CInt
+dill_chsend_int ch value = do
+  val <- malloc
+  pokeElemOff val 0 value
+  let valSize = fromIntegral (sizeOf value)
+  res <- internal_dill_chsend_int ch val valSize (-1)
+  return res
+
+foreign import ccall "dill_chsend" internal_dill_chsend_int
+  :: CInt -> Ptr CInt -> CInt -> CInt -> IO CInt
 
 dill_chrecv_int :: CInt -> IO (Maybe CInt)
 dill_chrecv_int ch = do
