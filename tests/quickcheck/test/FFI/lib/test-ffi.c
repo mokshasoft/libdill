@@ -10,3 +10,11 @@ coroutine void sender(int ch, int val) {
 int ffi_go_sender(int ch, int val) {
     return go(sender(ch, val));
 }
+
+static coroutine void coroutine_proxy_func(Callback func) {
+    func();
+}
+
+int go_coroutine(Callback func) {
+    return go(coroutine_proxy_func(func));
+}
