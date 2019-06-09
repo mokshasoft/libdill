@@ -50,6 +50,7 @@ dill_chsend_int ch value = do
   pokeElemOff val 0 value
   let valSize = fromIntegral (sizeOf value)
   res <- internal_dill_chsend_int ch val valSize (-1)
+  free val
   return res
 
 foreign import ccall "dill_chsend" internal_dill_chsend_int
@@ -60,11 +61,14 @@ dill_chrecv_int ch = do
   val <- malloc
   let valSize = fromIntegral (sizeOf (0 :: CInt))
   res <- internal_dill_chrecv_int ch val valSize (-1)
-  if res /= 0
-    then return Nothing
-    else do
-      v <- peekElemOff val 0
-      return $ Just v
+  ret <-
+    if res /= 0
+      then return Nothing
+      else do
+        v <- peekElemOff val 0
+        return $ Just v
+  free val
+  return ret
 
 foreign import ccall "dill_chrecv" internal_dill_chrecv_int
   :: CInt -> Ptr CInt -> CInt -> CInt -> IO CInt
