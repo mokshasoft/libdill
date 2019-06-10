@@ -23,7 +23,8 @@ main :: IO ()
 main = do
   quickCheck (withMaxSuccess 10000 prop_GetChannel)
   quickCheck (withMaxSuccess 10000 prop_ReceiverWaitsForSender)
-  quickCheck (withMaxSuccess 10000 prop_SimultaneousSenders)
+  quickCheck (withMaxSuccess 1000 prop_SimultaneousSenders)
+  quickCheck (withMaxSuccess 1000 prop_SimultaneousReceivers)
 
 -- |Print a string and trigger an assert
 triggerAssert :: String -> IO ()
@@ -77,6 +78,28 @@ prop_ReceiverWaitsForSender val =
 -- |Test multiple simultaneous senders, each sender sends one value
 prop_SimultaneousSenders :: NonEmptyList CInt -> Property
 prop_SimultaneousSenders (NonEmpty vs) =
+  monadicIO $ do
+    res <- run testProp
+    assert res
+  where
+    testProp :: IO Bool
+    testProp = do
+      channel <- getChannel
+      hdls <- mapM (ffi_go_sender (fst channel)) vs
+      unless (all isJust hdls) $ triggerAssert "Failed to get all sender handles"
+      let handles = map (fromMaybe 0) hdls
+      rvs <- mapM (\_ -> dill_chrecv_int (snd channel)) handles
+      unless (all isJust rvs) $ triggerAssert "Failed to receive all values"
+      let retVals = map (fromMaybe 0) rvs
+      closeChannel channel
+      rcs <- mapM dill_hclose handles
+      unless (all (== 0) rcs) $
+        triggerAssert "Failed to close all sender handles"
+      return $ vs == retVals
+
+-- |Test multiple simultaneous receivers, each sender sends one value
+prop_SimultaneousReceivers :: NonEmptyList CInt -> Property
+prop_SimultaneousReceivers (NonEmpty vs) =
   monadicIO $ do
     res <- run testProp
     assert res
