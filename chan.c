@@ -177,7 +177,6 @@ static void dill_chcancel(struct dill_clause *cl) {
 }
 
 int dill_chsend(int h, const void *val, size_t len, int64_t deadline) {
-    printf("dill_chsend: ch=%d val=%d\n", h, *(int*)val);
     int rc = dill_canblock();
     if(dill_slow(rc < 0)) return -1;
     /* Get the channel interface. */
