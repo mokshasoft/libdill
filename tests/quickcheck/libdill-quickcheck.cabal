@@ -8,6 +8,7 @@ test-suite libdill-quickcheck-test
   hs-source-dirs:      test
   main-is:             QuickCheck.hs
   other-modules:       FFI.Channels
+                     , FFI.Handles
                      , FFI.Helpers
                      , FFI.TestCaseFFI
   build-depends:       base

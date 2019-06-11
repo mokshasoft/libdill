@@ -16,6 +16,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 
 import FFI.Channels
+import FFI.Handles
 import FFI.Helpers
 import FFI.TestCaseFFI
 
