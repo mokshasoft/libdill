@@ -15,7 +15,6 @@ module FFI.Helpers
   , dill_msleep
   ) where
 
-import Data.Int
 import Foreign.C
 
 foreign import ccall "dill_now" dill_now :: IO CLong

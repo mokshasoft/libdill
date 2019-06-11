@@ -18,7 +18,6 @@ module FFI.Channels
   ) where
 
 import Control.Monad
-import Data.Int
 import Foreign.C
 import Foreign.Marshal.Alloc
 import Foreign.Marshal.Array
