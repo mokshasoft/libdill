@@ -49,6 +49,12 @@ closeChannel channel = do
   rc2 <- dill_hclose (fst channel)
   unless (rc2 == 0) $ triggerAssert "Failed to close sender end-point"
 
+-- |Close all handles
+closeAllHandles :: [CInt] -> IO ()
+closeAllHandles handles = do
+  rcs <- mapM dill_hclose handles
+  unless (all (== 0) rcs) $ triggerAssert "Failed to close all handles"
+
 -- |Test that dill_chmake always returns a channel.
 prop_GetChannel :: Property
 prop_GetChannel =
@@ -95,9 +101,7 @@ prop_SimultaneousSenders (NonEmpty vs) =
       unless (all isJust rvs) $ triggerAssert "Failed to receive all values"
       let retVals = map (fromMaybe 0) rvs
       closeChannel channel
-      rcs <- mapM dill_hclose handles
-      unless (all (== 0) rcs) $
-        triggerAssert "Failed to close all sender handles"
+      closeAllHandles handles
       return $ vs == retVals
 
 -- |Test multiple simultaneous receivers, each sender sends one value
@@ -114,12 +118,10 @@ prop_SimultaneousReceivers (NonEmpty vs) =
       unless (all isJust hdls) $
         triggerAssert "Failed to get all receiver handles"
       let handles = map (fromMaybe 0) hdls
-      rcs1 <- mapM (dill_chsend_int (snd channel)) vs
-      unless (all (== 0) rcs1) $ triggerAssert "Failed to send all values"
+      rcs <- mapM (dill_chsend_int (snd channel)) vs
+      unless (all (== 0) rcs) $ triggerAssert "Failed to send all values"
       closeChannel channel
-      rcs2 <- mapM dill_hclose handles
-      unless (all (== 0) rcs2) $
-        triggerAssert "Failed to close all receiver handles"
+      closeAllHandles handles
       return True -- ffi_go_receiver checks that the received values are correct
 
 -- |Test that chdone unblocks all senders
@@ -142,7 +144,5 @@ prop_chdoneUnblocksSenders (NonEmpty vs) =
       rc2 <- dill_chdone (snd channel)
       unless (rc2 == 0) $ triggerAssert "Failed to close channel"
       closeChannel channel
-      rcs <- mapM dill_hclose handles
-      unless (all (== 0) rcs) $
-        triggerAssert "Failed to close all sender handles"
+      closeAllHandles handles
       return True
