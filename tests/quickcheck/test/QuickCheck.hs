@@ -107,14 +107,13 @@ prop_SimultaneousReceivers (NonEmpty vs) =
     testProp :: IO Bool
     testProp = do
       channel <- getChannel
-      hdls <- mapM (ffi_go_sender (fst channel)) vs
-      unless (all isJust hdls) $ triggerAssert "Failed to get all sender handles"
+      hdls <- mapM (ffi_go_receiver (fst channel)) vs
+      unless (all isJust hdls) $ triggerAssert "Failed to get all receiver handles"
       let handles = map (fromMaybe 0) hdls
-      rvs <- mapM (\_ -> dill_chrecv_int (snd channel)) handles
-      unless (all isJust rvs) $ triggerAssert "Failed to receive all values"
-      let retVals = map (fromMaybe 0) rvs
+      rcs1 <- mapM (dill_chsend_int (snd channel)) vs
+      unless (all (== 0) rcs1) $ triggerAssert "Failed to send all values"
       closeChannel channel
-      rcs <- mapM dill_hclose handles
-      unless (all (== 0) rcs) $
-        triggerAssert "Failed to close all sender handles"
-      return $ vs == retVals
+      rcs2 <- mapM dill_hclose handles
+      unless (all (== 0) rcs2) $
+        triggerAssert "Failed to close all receiver handles"
+      return True -- ffi_go_receiver checks that the received values are correct
