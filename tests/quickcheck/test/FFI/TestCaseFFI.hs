@@ -12,6 +12,7 @@
  -}
 module FFI.TestCaseFFI
   ( ffi_go_sender
+  , ffi_go_sender_unblocked
   , ffi_go_receiver
   , ffi_go_sender2
   ) where
@@ -30,6 +31,16 @@ ffi_go_sender ch val = do
     else return (Just hdl)
 
 foreign import ccall "ffi_go_sender" internal_ffi_go_sender
+  :: CInt -> CInt -> IO CInt
+
+ffi_go_sender_unblocked :: CInt -> CInt -> IO (Maybe CInt)
+ffi_go_sender_unblocked ch val = do
+  hdl <- internal_ffi_go_sender_unblocked ch val
+  if hdl < 0
+    then return Nothing
+    else return (Just hdl)
+
+foreign import ccall "ffi_go_sender_unblocked" internal_ffi_go_sender_unblocked
   :: CInt -> CInt -> IO CInt
 
 ffi_go_receiver :: CInt -> CInt -> IO (Maybe CInt)

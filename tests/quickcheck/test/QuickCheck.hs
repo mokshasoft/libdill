@@ -16,6 +16,7 @@ import Test.QuickCheck
 import Test.QuickCheck.Monadic
 
 import FFI.Channels
+import FFI.Helpers
 import FFI.TestCaseFFI
 
 -- |Top-level function that runs all libdill QuickCheck tests.
@@ -25,6 +26,7 @@ main = do
   quickCheck (withMaxSuccess 10000 prop_ReceiverWaitsForSender)
   quickCheck (withMaxSuccess 1000 prop_SimultaneousSenders)
   quickCheck (withMaxSuccess 1000 prop_SimultaneousReceivers)
+  quickCheck (withMaxSuccess 100 prop_chdoneUnblocksSenders)
 
 -- |Print a string and trigger an assert
 triggerAssert :: String -> IO ()
@@ -117,3 +119,27 @@ prop_SimultaneousReceivers (NonEmpty vs) =
       unless (all (== 0) rcs2) $
         triggerAssert "Failed to close all receiver handles"
       return True -- ffi_go_receiver checks that the received values are correct
+
+-- |Test that chdone unblocks all senders
+prop_chdoneUnblocksSenders :: NonEmptyList CInt -> Property
+prop_chdoneUnblocksSenders (NonEmpty vs) =
+  monadicIO $ do
+    res <- run testProp
+    assert res
+  where
+    testProp :: IO Bool
+    testProp = do
+      channel <- getChannel
+      hdls <- mapM (ffi_go_sender_unblocked (fst channel)) vs
+      unless (all isJust hdls) $ triggerAssert "Failed to get all sender handles"
+      let handles = map (fromMaybe 0) hdls
+      now <- dill_now
+      rc1 <- dill_msleep $ now + 50
+      unless (rc1 == 0) $ triggerAssert "Failed to sleep"
+      rc2 <- dill_chdone (snd channel)
+      unless (rc2 == 0) $ triggerAssert "Failed to close channel"
+      closeChannel channel
+      rcs <- mapM dill_hclose handles
+      unless (all (== 0) rcs) $
+        triggerAssert "Failed to close all sender handles"
+      return True

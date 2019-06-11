@@ -11,6 +11,15 @@ int ffi_go_sender(int ch, int val) {
     return go(sender(ch, val));
 }
 
+coroutine void sender_unblocked(int ch, int val) {
+    int rc = chsend(ch, &val, sizeof(val), -1);
+    errno_assert(rc == -1 && errno == EPIPE);
+}
+
+int ffi_go_sender_unblocked(int ch, int val) {
+    return go(sender_unblocked(ch, val));
+}
+
 coroutine void receiver(int ch, int expected) {
     int val;
     int rc = chrecv(ch, &val, sizeof(val), -1);
