@@ -5,6 +5,13 @@
  the GNU General Public License version 3. Note that NO WARRANTY is provided.
  See "LICENSE.txt" for details.
  -}
+{-
+ Test the libdill channel interface using QuickCheck
+ -}
+module ChannelQC
+  ( quickcheckChannel
+  ) where
+
 import qualified Control.Exception as CE
 import Control.Monad
 import Data.Int
@@ -20,9 +27,9 @@ import FFI.Handles
 import FFI.Helpers
 import FFI.TestCaseFFI
 
--- |Top-level function that runs all libdill QuickCheck tests.
-main :: IO ()
-main = do
+-- |Top-level function that runs all libdill channel QuickCheck tests.
+quickcheckChannel :: IO ()
+quickcheckChannel = do
   quickCheck (withMaxSuccess 10000 prop_GetChannel)
   quickCheck (withMaxSuccess 10000 prop_ReceiverWaitsForSender)
   quickCheck (withMaxSuccess 1000 prop_SimultaneousSenders)

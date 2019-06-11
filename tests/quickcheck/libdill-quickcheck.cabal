@@ -7,7 +7,8 @@ test-suite libdill-quickcheck-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             QuickCheck.hs
-  other-modules:       FFI.Channels
+  other-modules:       ChannelQC
+                     , FFI.Channels
                      , FFI.Handles
                      , FFI.Helpers
                      , FFI.TestCaseFFI
