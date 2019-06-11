@@ -88,7 +88,8 @@ prop_SimultaneousSenders (NonEmpty vs) =
     testProp = do
       channel <- getChannel
       hdls <- mapM (ffi_go_sender (fst channel)) vs
-      unless (all isJust hdls) $ triggerAssert "Failed to get all sender handles"
+      unless (all isJust hdls) $
+        triggerAssert "Failed to get all sender handles"
       let handles = map (fromMaybe 0) hdls
       rvs <- mapM (\_ -> dill_chrecv_int (snd channel)) handles
       unless (all isJust rvs) $ triggerAssert "Failed to receive all values"
@@ -110,7 +111,8 @@ prop_SimultaneousReceivers (NonEmpty vs) =
     testProp = do
       channel <- getChannel
       hdls <- mapM (ffi_go_receiver (fst channel)) vs
-      unless (all isJust hdls) $ triggerAssert "Failed to get all receiver handles"
+      unless (all isJust hdls) $
+        triggerAssert "Failed to get all receiver handles"
       let handles = map (fromMaybe 0) hdls
       rcs1 <- mapM (dill_chsend_int (snd channel)) vs
       unless (all (== 0) rcs1) $ triggerAssert "Failed to send all values"
@@ -131,7 +133,8 @@ prop_chdoneUnblocksSenders (NonEmpty vs) =
     testProp = do
       channel <- getChannel
       hdls <- mapM (ffi_go_sender_unblocked (fst channel)) vs
-      unless (all isJust hdls) $ triggerAssert "Failed to get all sender handles"
+      unless (all isJust hdls) $
+        triggerAssert "Failed to get all sender handles"
       let handles = map (fromMaybe 0) hdls
       now <- dill_now
       rc1 <- dill_msleep $ now + 50
