@@ -1,3 +1,11 @@
+/*
+ * Copyright 2019, Mokshasoft AB (mokshasoft.com)
+ *
+ * This software may be distributed and modified according to the terms of
+ * the GNU General Public License version 3. Note that NO WARRANTY is provided.
+ * See "LICENSE.txt" for details.
+ */
+
 #include "test-ffi.h"
 #include "libdill.h"
 #include "tests/assert.h"
